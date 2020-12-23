@@ -4,6 +4,12 @@
 # These tests were hand calculated by Luis M. Rocha and implemented by Rion B. Correia.
 #
 from __future__ import division
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import unicode_literals
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *
 from cana.boolean_node import BooleanNode
 from cana.datasets.bools import CONTRADICTION,AND,OR,XOR,COPYx1,RULE90,RULE110
 from cana.utils import *

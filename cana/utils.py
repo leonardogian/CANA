@@ -1,3 +1,14 @@
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from __future__ import unicode_literals
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *
+from builtins import map
+from builtins import str
+from builtins import range
+from past.utils import old_div
 import networkx as nx
 import numpy as np
 from itertools import product, zip_longest, count, takewhile
@@ -324,7 +335,7 @@ def print_logic_table(outputs):
 		>>> 11 : 1
 
 	"""
-	k = int(math.log(len(outputs))/math.log(2))
+	k = int(old_div(math.log(len(outputs)),math.log(2)))
 	for statenum in range(2**k):
 		print(statenum_to_binstate(statenum, base=k) + " : " + str(outputs[statenum]))
 
@@ -336,7 +347,7 @@ def entropy(prob_vector, logbase = 2.):
 	"""
 	prob_vector = np.array(prob_vector)
 	pos_prob_vector = prob_vector[prob_vector > 0]
-	return - np.sum(pos_prob_vector * np.log(pos_prob_vector)/np.log(logbase))
+	return - np.sum(old_div(pos_prob_vector * np.log(pos_prob_vector),np.log(logbase)))
 
 def binstate_compare(binstate1, binstate2):
 	"""
@@ -382,8 +393,8 @@ def ncr(n, r):
 	"""
 	r = min(r, n - r)
 	if r == 0: return 1
-	numer = reduce(op.mul, range(n, n - r, -1))
-	denom = reduce(op.mul, range(1, r + 1))
+	numer = reduce(op.mul, list(range(n, n - r, -1)))
+	denom = reduce(op.mul, list(range(1, r + 1)))
 	return numer // denom
 
 def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):

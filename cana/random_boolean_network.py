@@ -6,12 +6,21 @@ Random Boolean Network
 
 
 """
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import unicode_literals
 #	Copyright (C) 2017 by
 #	Alex Gates <ajgates@indiana.edu>
 #	Rion Brattig Correia <rionbr@gmail.com>
 #	Thomas Parmer <tjparmer@indiana.edu>
 #	All rights reserved.
 #	MIT license.
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *
+from builtins import str
+from builtins import range
 from collections import defaultdict, Counter
 
 import numpy as np
@@ -90,7 +99,7 @@ def _remove_duplicate_edges(graph, niter_remove = 100):
 	edge_list = list(graph.edges())
 	edge_frequency = Counter(edge_list)
 
-	duplicate_edges = [edge for edge, num_edge in edge_frequency.items() if num_edge > 1]
+	duplicate_edges = [edge for edge, num_edge in list(edge_frequency.items()) if num_edge > 1]
 
 	iremove_iter = 0
 	while len(duplicate_edges) > 0 and iremove_iter < niter_remove:
@@ -112,7 +121,7 @@ def _remove_duplicate_edges(graph, niter_remove = 100):
 
 				edge_list = list(graph.edges())
 
-		duplicate_edges = [edge for edge, num_edge in edge_frequency.items() if num_edge > 1]
+		duplicate_edges = [edge for edge, num_edge in list(edge_frequency.items()) if num_edge > 1]
 		iremove_iter += 1
 
 	if iremove_iter >= niter_remove:

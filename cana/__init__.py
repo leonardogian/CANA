@@ -1,3 +1,10 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *
 __package__ = 'cana'
 __title__ = u'CANAlization: Control & Redundancy in Boolean Networks'
 __description__ = u'This package implements a series of methods used to study control, canalization and redundancy in Boolean Networks.'

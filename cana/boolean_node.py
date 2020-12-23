@@ -13,6 +13,17 @@ Boolean Node
 #   All rights reserved.
 #   MIT license.
 from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *
+from builtins import zip
+from builtins import map
+from builtins import str
+from builtins import range
+from builtins import object
 import numpy as np
 import pandas as pd
 from itertools import compress, combinations
@@ -161,21 +172,21 @@ class BooleanNode(object):
 			redundancies = []
 			# Generate a per input coverage
 			# ex: {0: {'11': [], '10': [], '00': [], '01': []}, 1: {'11': [], '10': [], '00': [], '01': []}}
-			pi_input_coverage = { input : { binstate: [ pi[input] for pi in pis ] for binstate,pis in self._pi_coverage.items() } for input in range(self.k) }
+			pi_input_coverage = { input : { binstate: [ pi[input] for pi in pis ] for binstate,pis in list(self._pi_coverage.items()) } for input in range(self.k) }
 
 			# Loop ever input node
-			for input,binstates in pi_input_coverage.items():
+			for input,binstates in list(pi_input_coverage.items()):
 				# {'numstate': [matches], '10': [True,False,True,...] ...}
-				countslenghts = {binstate_to_statenum(binstate): ([pi=='2' for pi in pis]) for binstate,pis in binstates.items() }
+				countslenghts = {binstate_to_statenum(binstate): ([pi=='2' for pi in pis]) for binstate,pis in list(binstates.items()) }
 				# A triplet of (min, mean, max) values
 				if bound == 'lower':
-					redundancy = sum( [all(pi) for pi in countslenghts.values()] ) / 2**self.k  # min(r_i)
+					redundancy = sum( [all(pi) for pi in list(countslenghts.values())] ) / 2**self.k  # min(r_i)
 				elif bound == 'mean':
-					redundancy = sum( [sum(pi)/len(pi) for pi in countslenghts.values()] ) / 2**self.k  # <r_i>
+					redundancy = sum( [sum(pi)/len(pi) for pi in list(countslenghts.values())] ) / 2**self.k  # <r_i>
 				elif bound == 'upper':
-					redundancy = sum( [any(pi) for pi in countslenghts.values()] ) / 2**self.k # max(r_i)
+					redundancy = sum( [any(pi) for pi in list(countslenghts.values())] ) / 2**self.k # max(r_i)
 				elif bound == 'tuple':
-					redundancy = ( sum([all(pi) for pi in countslenghts.values()]) / 2**self.k , sum([any(pi) for pi in countslenghts.values()]) / 2**self.k ) # (min,max)
+					redundancy = ( sum([all(pi) for pi in list(countslenghts.values())]) / 2**self.k , sum([any(pi) for pi in list(countslenghts.values())]) / 2**self.k ) # (min,max)
 				else:
 					raise AttributeError('The bound you selected does not exist. Try "upper", "mean", "lower" or "tuple".')
 
@@ -294,11 +305,11 @@ class BooleanNode(object):
 			# Generate a per input coverage
 			# ex: {0: {'11': [], '10': [], '00': [], '01': []}, 1: {'11': [], '10': [], '00': [], '01': []}}
 			#ts_input_coverage = { input : { binstate: [ idxs.count(input) for schema,reps,sms in tss for idxs in reps+sms ] for binstate,tss in self._ts_coverage.items() } for input in range(self.k) }
-			ts_input_coverage = { input : { binstate: [ len(idxs) if input in idxs else 0 for schema,reps,sms in tss for idxs in reps+sms ] for binstate,tss in self._ts_coverage.items() } for input in range(self.k) }
+			ts_input_coverage = { input : { binstate: [ len(idxs) if input in idxs else 0 for schema,reps,sms in tss for idxs in reps+sms ] for binstate,tss in list(self._ts_coverage.items()) } for input in range(self.k) }
 			# Loop ever input node
-			for input,binstates in ts_input_coverage.items():
+			for input,binstates in list(ts_input_coverage.items()):
 				# {'numstate': [number-of-ts's for each match], '10': [0, 2] ...}
-				numstates = {binstate_to_statenum(binstate): permuts for binstate,permuts in binstates.items() }
+				numstates = {binstate_to_statenum(binstate): permuts for binstate,permuts in list(binstates.items()) }
 
 				#print 'input',input
 				#print binstates
@@ -313,11 +324,11 @@ class BooleanNode(object):
 					elif bound == 'lower':
 						minmax = min
 
-					s_i = sum(minmax(permuts) if len(permuts) else 0 for permuts in numstates.values() ) / 2**self.k  # min(r_s)
+					s_i = sum(minmax(permuts) if len(permuts) else 0 for permuts in list(numstates.values()) ) / 2**self.k  # min(r_s)
 
 				elif bound == 'tuple':
 					# tuple (min,max) per input, per state
-					s_i = [ ( min(permuts) , max(permuts) ) if len(permuts) else (0,0) for permuts in numstates.values() ] # (min,max)
+					s_i = [ ( min(permuts) , max(permuts) ) if len(permuts) else (0,0) for permuts in list(numstates.values()) ] # (min,max)
 				else:
 					raise AttributeError('The bound you selected does not exist. Try "upper", "mean", "lower" or "tuple".')
 				symmetries.append(s_i)
@@ -345,7 +356,7 @@ class BooleanNode(object):
 			k = 2
 		else:
 			k = self.k
-		for statenum, output in zip( range(2**k), self.outputs):
+		for statenum, output in zip( list(range(2**k)), self.outputs):
 			# Binary State, Transition
 			d.append( (statenum_to_binstate(statenum, base=self.k), output) )
 		df = pd.DataFrame(d, columns=['In:','Out:'])
@@ -401,7 +412,7 @@ class BooleanNode(object):
 							if format == 'latex':
 								if j>0:
 									string += u' \,  | \, '
-								string += r' '.join([x if (k not in permutable) else '\overset{%s}{%s}' % (ts_symbol_latex,unicode(x)) for k,x in enumerate(schemata, start=0)])
+								string += r' '.join([x if (k not in permutable) else '\overset{%s}{%s}' % (ts_symbol_latex,str(x)) for k,x in enumerate(schemata, start=0)])
 							else:
 								if j>0:
 									string += u' | '
@@ -691,7 +702,7 @@ class BooleanNode(object):
 		if mode != 'forceK':
 			for j in product('01', repeat=self.k):
 				origin_config = list(j)
-				for mut in combinations(range(self.k), ic):
+				for mut in combinations(list(range(self.k)), ic):
 					mut_config = origin_config[:]
 					for i_mut in mut:
 						mut_config[i_mut] = flip_bit(mut_config[i_mut])
@@ -705,7 +716,7 @@ class BooleanNode(object):
 			for ic in range(max(1, c + self.k - max_k), min(c, self.k) + 1):
 				for j in product('01', repeat=self.k):
 					origin_config = list(j)
-					for mut in combinations(range(self.k), ic):
+					for mut in combinations(list(range(self.k)), ic):
 						mut_config = origin_config[:]
 						for i_mut in mut:
 							mut_config[i_mut] = flip_bit(mut_config[i_mut])

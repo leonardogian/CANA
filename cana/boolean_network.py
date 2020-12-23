@@ -6,12 +6,25 @@ Boolean Network
 
 
 """
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from __future__ import unicode_literals
 #	Copyright (C) 2017 by
 #	Rion Brattig Correia <rionbr@gmail.com>
 #	Alex Gates <ajgates@indiana.edu>
 #	Thomas Parmer <tjparmer@indiana.edu>
 #	All rights reserved.
 #	MIT license.
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *
+from builtins import zip
+from builtins import map
+from builtins import str
+from builtins import range
+from builtins import object
+from past.utils import old_div
 from collections import defaultdict
 try:
 	import cStringIO.StringIO as StringIO
@@ -29,7 +42,7 @@ import warnings
 import re
 #
 #
-class BooleanNetwork:
+class BooleanNetwork(object):
 	"""
 
 
@@ -255,7 +268,7 @@ class BooleanNetwork:
 		else:
 			name = ''
 		if keep_constants:
-			for i, nodelogic in logic.items():
+			for i, nodelogic in list(logic.items()):
 				# No inputs? It's a constant!
 				if len(nodelogic['in']) == 0:
 					constants[i] = logic[i]['out'][0]
@@ -280,7 +293,7 @@ class BooleanNetwork:
 		logic = self.logic.copy()
 		#
 		if adjust_no_input:
-			for i, data in logic.items():
+			for i, data in list(logic.items()):
 				# updates in place
 				if len(data['in']) == 0:
 					data['in'] = [i + 1]
@@ -330,7 +343,7 @@ class BooleanNetwork:
 				self._sg.add_edge(source, target, **{'weight':1.})
 
 		if remove_constants:
-			self._sg.remove_nodes_from(self.constants.keys())
+			self._sg.remove_nodes_from(list(self.constants.keys()))
 		#
 		return self._sg
 
@@ -484,7 +497,7 @@ class BooleanNetwork:
 			list
 		"""
 		self._check_compute_variables(stg=True)
-		return sorted(self._stg.in_degree().values(), reverse=True)
+		return sorted(list(self._stg.in_degree().values()), reverse=True)
 
 	def step(self, initial):
 		"""Steps the boolean network 'n' step from the given initial input condition.
@@ -602,7 +615,7 @@ class BooleanNetwork:
 		See Also:
 			:func:`~boolnets.boolean_node.bias`
 		"""
-		return sum([node.bias() for node in self.nodes]) / self.Nnodes
+		return old_div(sum([node.bias() for node in self.nodes]), self.Nnodes)
 
 	def basin_entropy(self, base=2):
 		"""
@@ -610,7 +623,7 @@ class BooleanNetwork:
 		"""
 		self._check_compute_variables(stg=True)
 
-		prob_vec = np.array([len(wcc) for wcc in nx.weakly_connected_components(self._stg)])/2.0**self.Nnodes
+		prob_vec = old_div(np.array([len(wcc) for wcc in nx.weakly_connected_components(self._stg)]),2.0**self.Nnodes)
 		return entropy(prob_vec, base=base)
 
 	def set_constant(self, node, value=None):
@@ -644,7 +657,7 @@ class BooleanNetwork:
 		"""
 		if self.keep_constants:
 			self.Nstates = 2**(self.Nnodes - self.Nconstants)
-			constant_template = [None if not (ivar in self.constants.keys()) else self.constants[ivar] for ivar in range(self.Nnodes)]
+			constant_template = [None if not (ivar in list(self.constants.keys())) else self.constants[ivar] for ivar in range(self.Nnodes)]
 			self.bin2num = lambda bs: constantbinstate_to_statenum(bs, constant_template)
 			self.num2bin = lambda sn: binstate_to_constantbinstate(
 				statenum_to_binstate(sn, base=self.Nnodes - self.Nconstants), constant_template)
@@ -707,7 +720,7 @@ class BooleanNetwork:
 		"""
 		nodeids = list(range(self.Nnodes))
 		if self.keep_constants:
-			for cv in self.constants.keys():
+			for cv in list(self.constants.keys()):
 				nodeids.remove(cv)
 
 		attractor_controllers_found = []
@@ -946,7 +959,7 @@ class BooleanNetwork:
 			reachable_from.append(control_reach)
 
 		norm = (2.0**self.Nnodes - 1.0) * len(reachable_from)
-		reachable_from = sum(reachable_from) / (norm)
+		reachable_from = old_div(sum(reachable_from), (norm))
 
 		return reachable_from
 
@@ -968,7 +981,7 @@ class BooleanNetwork:
 			reachable_from.append(control_reach)
 
 		norm = (2.0**self.Nnodes - 1.0) * len(reachable_from)
-		control_from = sum(control_from) / (norm)
+		control_from = old_div(sum(control_from), (norm))
 
 		return control_from
 
@@ -989,7 +1002,7 @@ class BooleanNetwork:
 		else:
 			# otherwise find the reachable from each attractor
 			att_reachable_from = [len(self._dfs_reachable(cag, idxatt)) - 1.0 for idxatt in cag]
-			att_reachable_from = sum(att_reachable_from) / (att_norm)
+			att_reachable_from = old_div(sum(att_reachable_from), (att_norm))
 
 		return att_reachable_from
 
@@ -1002,9 +1015,9 @@ class BooleanNetwork:
 			(int) : Number of Accessible Attractors
 		"""
 		reached_attractors = []
-		for att, pcstg in pcstg_dict.items():
+		for att, pcstg in list(pcstg_dict.items()):
 			pinned_att = list(nx.attracting_components(pcstg))
-			print(set(att), pinned_att)
+			print((set(att), pinned_att))
 			reached_attractors.append(set(att) in pinned_att)
 		return sum(reached_attractors) / float(len(pcstg_dict))
 
@@ -1018,11 +1031,11 @@ class BooleanNetwork:
 			(list) : the Fraction of successfully Pinned Configurations to each attractor
 		"""
 		pinned_configurations = []
-		for att, pcstg in pcstg_dict.items():
+		for att, pcstg in list(pcstg_dict.items()):
 			att_reached = False
 			for wcc in nx.weakly_connected_components(pcstg):
 				if set(att) in list(nx.attracting_components(pcstg.subgraph(wcc))):
-					pinned_configurations.append(len(wcc)/ len(pcstg))
+					pinned_configurations.append(old_div(len(wcc), len(pcstg)))
 					att_reached = True
 			if not att_reached:
 				pinned_configurations.append(0)
@@ -1038,7 +1051,7 @@ class BooleanNetwork:
 		Returns:
 			(int) : the mean Fraction of successfully Pinned Configurations
 		"""
-		return sum(self.fraction_pinned_configurations(pcstg_dict)) / len(pcstg_dict)
+		return old_div(sum(self.fraction_pinned_configurations(pcstg_dict)), len(pcstg_dict))
 
 	def _dfs_reachable(self, G, source):
 		"""Produce nodes in a depth-first-search pre-ordering starting from source."""
@@ -1192,7 +1205,7 @@ class BooleanNetwork:
 		"""
 
 		if target_set is None:
-			target_set = range(self.Nnodes)
+			target_set = list(range(self.Nnodes))
 
 		Gstr = self.structural_graph()
 		
@@ -1205,7 +1218,7 @@ class BooleanNetwork:
 		impact_matrix[0, :, :] = self.Nnodes + 1 # if we can't reach the node, then the paths cant be longer than the number of nodes in the graph
 
 		Gstr_shortest_dist, Gstr_shortest_paths = nx.single_source_dijkstra(Gstr, source, target=None, cutoff=n_steps)
-		Gstr_shortest_dist = {n:int(l) for n, l in Gstr_shortest_dist.items()}
+		Gstr_shortest_dist = {n:int(l) for n, l in list(Gstr_shortest_dist.items())}
 
 		Geff_shortest_dist, Geff_shortest_paths = nx.single_source_dijkstra(Geff, source, target=None, cutoff=n_steps, weight=eff_weight_func)
 		
@@ -1215,7 +1228,7 @@ class BooleanNetwork:
 				impact_matrix[0, list(range(Gstr_shortest_dist[target], n_steps+1)), itar] = Gstr_shortest_dist[target]
 
 				# the number is edges in the path is one less than the number of nodes
-				eff_path_steps = len(Geff_shortest_paths.get(itar, range(n_steps+1))) - 1 
+				eff_path_steps = len(Geff_shortest_paths.get(itar, list(range(n_steps+1)))) - 1 
 				
 				# check to see if the effective path is longer than the light cone
 				if eff_path_steps > Gstr_shortest_dist[target] and eff_path_steps < n_steps + 1:
@@ -1265,16 +1278,16 @@ class BooleanNetwork:
 		"""
 
 		if target_set is None:
-			target_set = range(self.Nnodes)
+			target_set = list(range(self.Nnodes))
 
 		# choose the underlying graph and get the edge weights
 		if mode == 'effective':
 			G = self.effective_graph(bound=bound, threshold=threshold)
-			weights = {e:w for e,w in nx.get_edge_attributes(G, 'weight').items()}
+			weights = {e:w for e,w in list(nx.get_edge_attributes(G, 'weight').items())}
 
 		elif mode == 'structural':
 			G = self.structural_graph()
-			weights = {e:0.5 for e,w in nx.get_edge_attributes(G, 'weight').items()}
+			weights = {e:0.5 for e,w in list(nx.get_edge_attributes(G, 'weight').items())}
 
 		
 		impact_matrix = np.zeros((n_steps, len(target_set)))
@@ -1315,7 +1328,7 @@ class BooleanNetwork:
 
 	def average_dist_from_attractor(self):
 		dist = self.dist_from_attractor()
-		return np.mean([d[0] for d in dist.values() if d[0] > 0])
+		return np.mean([d[0] for d in list(dist.values()) if d[0] > 0])
 
 	#
 	# Dynamics Canalization Map (DCM)
@@ -1455,7 +1468,7 @@ class BooleanNetwork:
 		Returns:
 			trajlen (float) : The average trajectory length to an attractor.
 		"""
-		return sum(len(self.trajectory_to_attractor(random_binstate(self.Nnodes))) for isample in range(nsamples) )/nsamples
+		return old_div(sum(len(self.trajectory_to_attractor(random_binstate(self.Nnodes))) for isample in range(nsamples) ),nsamples)
 
 	def derrida_curve(self, nsamples=10, max_hamm = None, random_seed=None, method='random'):
 
@@ -1488,16 +1501,16 @@ class BooleanNetwork:
 				# sample nsample times
 				for isample in range(nsamples):
 					rnd_config = random_binstate(self.Nnodes)
-					perturbed_var = random.sample(range(self.Nnodes), hamm_dist)
+					perturbed_var = random.sample(list(range(self.Nnodes)), hamm_dist)
 					perturbed_config = [flip_bit(rnd_config[ivar]) if ivar in perturbed_var else rnd_config[ivar] for ivar in range(self.Nnodes)]
-					dy[hamm_dist] += hamming_distance(self.step(rnd_config), self.step(perturbed_config)) / self.Nnodes # normalized Hamming Distance
+					dy[hamm_dist] += old_div(hamming_distance(self.step(rnd_config), self.step(perturbed_config)), self.Nnodes) # normalized Hamming Distance
 
 			dy /= nsamples
 
 		elif method == 'sensitivity':
 
 			for hamm_dist in range(1, max_hamm +1):
-				dy[hamm_dist] = sum([node.c_sensitivity(hamm_dist,mode='forceK',max_k=self.Nnodes) for node in self.nodes])/self.Nnodes
+				dy[hamm_dist] = old_div(sum([node.c_sensitivity(hamm_dist,mode='forceK',max_k=self.Nnodes) for node in self.nodes]),self.Nnodes)
 
 		return dx, dy
 
@@ -1525,7 +1538,7 @@ class BooleanNetwork:
 			# sample nsample times
 			for isample in range(nsamples):
 				rnd_config = random_binstate(self.Nnodes)
-				perturbed_var = random.sample(range(self.Nnodes), hamm_dist)
+				perturbed_var = random.sample(list(range(self.Nnodes)), hamm_dist)
 				perturbed_config = [flip_bit(rnd_config[ivar]) if ivar in perturbed_var else rnd_config[ivar] for ivar in range(self.Nnodes)]
 				dy += hamming_distance(self.step(rnd_config), self.step(perturbed_config))
 
